@@ -2,7 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 
 const helperSource = fs.readFileSync('background.js', 'utf8');
-const step8ModuleSource = fs.readFileSync('background/steps/step8.js', 'utf8');
+const step8ModuleSource = fs.readFileSync('background/steps/confirm-oauth.js', 'utf8');
 
 function extractFunction(source, name) {
   const markers = [`async function ${name}(`, `function ${name}(`];

@@ -4,15 +4,16 @@ importScripts(
   'background/panel-bridge.js',
   'background/generated-email-helpers.js',
   'background/signup-flow-helpers.js',
-  'background/steps/step1.js',
-  'background/steps/step2.js',
-  'background/steps/step3.js',
-  'background/steps/step4.js',
-  'background/steps/step5.js',
-  'background/steps/step6.js',
-  'background/steps/step7.js',
-  'background/steps/step8.js',
-  'background/steps/step9.js',
+  'background/steps/registry.js',
+  'background/steps/open-chatgpt.js',
+  'background/steps/submit-signup-email.js',
+  'background/steps/fill-password.js',
+  'background/steps/fetch-signup-code.js',
+  'background/steps/fill-profile.js',
+  'background/steps/oauth-login.js',
+  'background/steps/fetch-login-code.js',
+  'background/steps/confirm-oauth.js',
+  'background/steps/platform-verify.js',
   'data/names.js',
   'hotmail-utils.js',
   'microsoft-email.js',
@@ -5441,19 +5442,7 @@ async function executeStep(step, options = {}) {
   }
 
   try {
-    switch (step) {
-      case 1: await executeStep1(state); break;
-      case 2: await executeStep2(state); break;
-      case 3: await executeStep3(state); break;
-      case 4: await executeStep4(state); break;
-      case 5: await executeStep5(state); break;
-      case 6: await executeStep6(state); break;
-      case 7: await executeStep7(state); break;
-      case 8: await executeStep8(state); break;
-      case 9: await executeStep9(state); break;
-      default:
-        throw new Error(`未知步骤：${step}`);
-    }
+    await stepRegistry.executeStep(step, state);
   } catch (err) {
     if (isStopError(err)) {
       await setStepStatus(step, 'stopped');
@@ -6533,6 +6522,17 @@ const step9Executor = self.MultiPageBackgroundStep9?.createStep9Executor({
   shouldBypassStep9ForLocalCpa,
   SUB2API_STEP9_RESPONSE_TIMEOUT_MS,
 });
+const stepRegistry = self.MultiPageBackgroundStepRegistry?.createStepRegistry([
+  { id: 1, order: 10, key: 'open-chatgpt', title: '打开 ChatGPT 官网', execute: () => step1Executor.executeStep1() },
+  { id: 2, order: 20, key: 'submit-signup-email', title: '注册并输入邮箱', execute: (state) => step2Executor.executeStep2(state) },
+  { id: 3, order: 30, key: 'fill-password', title: '填写密码并继续', execute: (state) => step3Executor.executeStep3(state) },
+  { id: 4, order: 40, key: 'fetch-signup-code', title: '获取注册验证码', execute: (state) => step4Executor.executeStep4(state) },
+  { id: 5, order: 50, key: 'fill-profile', title: '填写姓名和生日', execute: (state) => step5Executor.executeStep5(state) },
+  { id: 6, order: 60, key: 'oauth-login', title: '刷新 OAuth 并登录', execute: (state) => step6Executor.executeStep6(state) },
+  { id: 7, order: 70, key: 'fetch-login-code', title: '获取登录验证码', execute: (state) => step7Executor.executeStep7(state) },
+  { id: 8, order: 80, key: 'confirm-oauth', title: '自动确认 OAuth', execute: (state) => step8Executor.executeStep8(state) },
+  { id: 9, order: 90, key: 'platform-verify', title: '平台回调验证', execute: (state) => step9Executor.executeStep9(state) },
+]);
 
 async function requestOAuthUrlFromPanel(state, options = {}) {
   return panelBridge.requestOAuthUrlFromPanel(state, options);
